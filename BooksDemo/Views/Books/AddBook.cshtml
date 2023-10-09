@@ -1,0 +1,76 @@
+﻿@model BooksDemo.Models.BooksView
+
+@{
+    ViewBag.Title = "Library Management System";
+}
+
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-lg-3 col-md-2 d-none d-md-block"></div>
+        <div class="col-lg-4 col-md-8 mt-5 p-4">
+            @using (Html.BeginForm("Index", "Books", FormMethod.Post, new { @id = "AddBook" }))
+            {
+                @Html.ValidationSummary(true, "", new { @class = "text-white" })
+                <div class="row">
+                    @Html.HiddenFor(model => model.BookId)
+                </div>
+                <div class="row">
+                    @Html.LabelFor(model => model.BookName, "Enter Book Name: ", new { @class = "fs-5 form-label text-white fw-bold" })
+                    @Html.TextBoxFor(model => model.BookName, new { @class = "form-control form-inline bg-dark border border-primary mb-3 me-3 text-white fw-bold" })
+                    @Html.ValidationMessageFor(model => model.BookName, "", new { @class = " fw-bold text-white" })
+                </div>
+                <div class="row mt-3">
+                    @Html.LabelFor(model => model.CategoryId, "Select Category: ", new { @class = "fs-5 form-label text-white fw-bold" })
+                    @Html.DropDownListFor(model => model.CategoryId, new SelectList(Model.CategoryModel, "CategoryId", "CategoryName"), "Display All Categories", new { @class = "form-control text-white fw-bold border border-primary mb-3 me-3 bg-dark " })
+                    @Html.ValidationMessageFor(model => model.CategoryId, "", new { @class = "fw-bold text-white" })
+                </div>
+                <div class="row mt-3">
+                    @Html.LabelFor(model => model.IsActive, "Book Status", new { @class = "fs-5 text-white fw-bold" })
+                    <div class="form-control bg-dark border border-primary mt-3">
+                        @Html.LabelFor(model => model.IsActive, new { @class = "text-white fw-bold fs-5" })
+                        @Html.CheckBoxFor(Model => Model.IsActive, new { @class = "ms-3" })
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-lg-6 col-md-6 col-sm-12 justify-content-sm-center text-center">
+                        <input type="submit" value="Save" id="SaveButton" class="btn btn-primary border border-primary mb-3 mt-3" />
+                    </div>
+                    <div class="col-lg-6 col-md-6 col-sm-12 justify-content-sm-center text-center">
+                        <input type="button" value="Cancel" id="CancelButton" class="btn btn-primary border border-primary mt-3 mb-3" />
+                    </div>
+                </div>
+            }
+        </div>
+        <div class="col-lg-3 col-md-2 d-none d-md-block"></div>
+    </div>
+</div>
+
+<script>
+    $(document).ready(function () {
+        $("#CancelButton").click(function () {
+            location.href = '@Url.Action("Index", "Books")';
+        })
+
+        $("#SaveButton").click(function (event) {
+            debugger;
+            event.preventDefault();
+            if ($("#AddBook").valid()) {
+                console.log($("#AddBook").serialize());
+                $.ajax({
+                    type: "POST",
+                    url: '@Url.Action("AddUpdateBook", "Books")',
+                    data: $("#AddBook").serialize(),
+                    success: function (response) {
+                        debugger;
+                        alert(response);
+                        location.href = '@Url.Action("Index", "Books")'
+
+                    }
+                });
+            }
+
+        });
+    });
+
+</script>

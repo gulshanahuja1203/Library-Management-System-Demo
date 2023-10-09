@@ -1,0 +1,434 @@
+﻿@model BooksDemo.Models.BooksView
+
+@{
+    ViewBag.Title = "Library Management System";
+}
+<div class="container">
+    <div class="row">
+        <div class="col-lg-3 col-md-3 col-sm-10 mt-3">
+            @using (Html.BeginForm("Index", "Books", FormMethod.Post, new { @id = "searchBook" }))
+            {
+                <div class="row">@Html.HiddenFor(model => model.BookId)</div>
+
+                <div class="row">
+                    @Html.LabelFor(model => model.BookName, "Enter Book Name: ", new { @class = "form-label text-white fw-bold fs-5" })
+                    @Html.TextBoxFor(model => model.BookName, new { @class = "form-control bg-dark border border-primary mb-3 me-3 text-white fw-bold" })
+                </div>
+
+                <div class="row">
+                    @Html.LabelFor(model => model.CategoryId, "Select Category: ", new { @class = "form-label text-white fw-bold fs-5" })
+                    @Html.DropDownListFor(model => model.CategoryId, new SelectList(Model.CategoryModel, "CategoryId", "CategoryName"), "Display All Categories", new { @class = "form-control text-white fw-bold border border-primary mb-3 me-3 bg-dark", Value = 0 })
+                </div>
+
+                <div class="row">
+                    @Html.HiddenFor(model => model.PageNumber)
+                </div>
+                <div class="row">
+                    @Html.LabelFor(model => model.PageSize, "Select Page Size: ", new { @class = "form-label text-white fw-bold fs-5" })
+                @Html.DropDownListFor(model => model.PageSize, new SelectList(Model.PageSizeDropDown), new { @class = "form-control text-white fw-bold border border-primary me-3 bg-dark" });
+                </div>
+                <div class="row">
+                    @Html.LabelFor(model => model.PublisherId, "Publisher", new { @class = "form-label text-white fw-bold fs-5" })
+                    @Html.DropDownListFor(model => model.PublisherId, new SelectList(Model.PublishersModel, "PublisherId", "PublisherName"), "Select Publisher", new { @class = "form-control text-white fw-bold border border-primary mb-3 me-3 bg-dark", Value = 0 });
+                </div>
+                <div class="row">
+                    <div class="col-lg-3 me-md-4 col-sm-10 justify-content-sm-center justify-content-md-center text-center">
+                        <input type="button" value="Search" id="SearchButton" class="btn fw-bold btn-primary border border-primary mb-3 mt-3" />
+                    </div>
+                    <div class="col-lg-3 me-md-3 col-sm-10 justify-content-sm-center justify-content-md-center text-center">
+                        <input type="reset" value="Reset" id="ResetButton" class="btn fw-bold btn-primary border border-primary mt-3 mb-3" />
+                    </div>
+                    <div class="col-lg-3 col-sm-10 justify-content-sm-center justify-content-md-center text-center">
+                        <input type="button" value="Add Book" id="AddButton" class="btn fw-bold btn-primary border border-primary mt-3 mb-3" />
+                    </div>
+                    <div class="col-lg-12 justify-content-sm-center justify-content-md-center text-center">
+                        <button type="button" id="AddButtonModal" class="btn fw-bold btn-primary border border-dark mt-3 mb-3">Add Book Using Modal</button>
+                    </div>
+                </div>
+            }
+        </div>
+
+        <div class="col-lg-9 col-md-9 col-sm-10 mt-4">
+            <div class="table_content table-responsive mt-3" id="table_content">
+                <table class="table table-light table-bordered table-striped text-center">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>
+                                @Html.DisplayNameFor(model => model.BookId)
+                            </th>
+                            <th>
+                                @Html.DisplayNameFor(model => model.BookName)
+                            </th>
+                            <th>
+                                @Html.DisplayNameFor(model => model.CategoryName)
+                            </th>
+                            <th>
+                                @Html.DisplayNameFor(model => model.IsActive)
+                            </th>
+                            <th>
+                                @Html.DisplayNameFor(model => model.PublisherBook)
+                            </th>
+                            <th>
+                                @Html.DisplayName("Edit")
+                            </th>
+                            <th>
+                                @Html.DisplayName("Delete")
+                            </th>
+                            <th>
+                                @Html.DisplayName("Edit With Modal")
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+            <div class="row" id="pagination"></div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal For Delete -->
+<div class="modal" tabindex="-1" role="dialog" id="DeleteForm">
+
+    <div class="modal-dialog" role="document">
+
+        <div class="modal-content">
+
+            <div class="modal-header">
+                <h5 class="modal-title">Delete Book</h5>
+                <button type="button" class="Cancel" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+
+            <div class="modal-body">
+                <p><strong>Book Id : <span id="bookId"></span></strong></p>
+                <p><strong>Book Name : <span id="bookName"></span></strong></p>
+                <p>Are you sure you want to delete the book?</p>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" id="Cancel" class="btn btn-secondary Cancel">Cancel</button>
+                <button type='button' id='Confirm' class='btn btn-primary'>Confirm</button>
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+
+<!-- Modal For Add Book -->
+<div class="modal fade" id="AddBookModalMenu" tabindex="-1" role="dialog" aria-labelledby="AddBookModalMenu" aria-hidden="true">
+
+    <div class="modal-dialog modal-dialog-centered" role="document">
+
+        <div class="modal-content">
+
+            <div class="modal-header">
+                <h5 class="modal-title text-dark" id="ModalLongTitle">Add Book</h5>
+                <button type="button" class="Cancel" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+
+            <div class="modal-body" style="background-image: url(https://img.freepik.com/free-photo/large-collection-old-books-wooden-shelves-generated-by-ai_188544-29739.jpg)">
+
+                <div class="row justify-content-center p-3">
+
+                    <div class="col-lg-10">
+                        <form id="AddBookUsingModal">
+                            @Html.ValidationSummary(true, "", new { @class = "text-dark" })
+                            <div class="row">
+                                @Html.HiddenFor(model => model.BookId)
+                            </div>
+                            <div class="row">
+                                @Html.LabelFor(model => model.BookName, "Enter Book Name: ", new { @class = "fs-5 form-label text-white fw-bold" })
+                                @Html.TextBoxFor(model => model.BookName, new { @class = "form-control form-inline bg-white border border-primary mb-3 me-3 text-dark fw-bold" })
+                                @Html.ValidationMessageFor(model => model.BookName, "", new { @class = " fw-bold text-white" })
+                            </div>
+                            <div class="row mt-3">
+                                @Html.LabelFor(model => model.CategoryId, "Select Category: ", new { @class = "fs-5 form-label text-white fw-bold" })
+                                @Html.DropDownListFor(model => model.CategoryId, new SelectList(Model.CategoryModel, "CategoryId", "CategoryName"), "Display All Categories", new { @class = "form-control text-dark fw-bold border border-primary mb-3 me-3 bg-white object-fit-content" })
+                                @Html.ValidationMessageFor(model => model.CategoryId, "", new { @class = "fw-bold text-white" })
+                            </div>
+                            <div class="row mt-3">
+                                @Html.LabelFor(model => model.IsActive, "Book Status", new { @class = "fs-5 text-white fw-bold" })
+                                <div class="form-control bg-white border border-primary mt-3">
+                                    @Html.LabelFor(model => model.IsActive, new { @class = "text-dark fw-bold fs-6" })
+                                    @Html.CheckBoxFor(Model => Model.IsActive, new { @class = "ms-3 bg-light", id = "checkbox" })
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+
+                </div>
+
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary fw-bold Cancel">Close</button>
+                <button type="button" class="btn btn-primary fw-bold" id="SaveModal">Save</button>
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<script>
+    //----------------------------------------Functions ------------------------------//
+
+    //For Pagination---------------------
+    function Pages(totalCount) {
+        $("#pagination").empty();
+        var pagination = '<ul class = "pagination justify-content-center">';
+        console.log($("#PageNumber").val());
+        if ($("#PageNumber").val() > 1) {
+            pagination += '<li class="page-item"><a class="page-link Previous border-dark text-white bg-dark" data-page = "Prev" href="#">Previous</a></li>';
+        }
+        for (var i = 1; i <= totalCount; i++) {
+            if ($("#PageNumber").val() == i) {
+                pagination += '<li class="page-item"><a class="page-link border-dark pages text-dark bg-white" data-page = ' + i + 'href="#">' + i + '</a></li>';
+            }
+            else {
+                pagination += '<li class="page-item"><a class="page-link border-dark text-white bg-dark pages d-none d-sm-block" data-page = ' + i + ' href="#">' + i + '</a></li>';
+            }
+        }
+        if ($("#PageNumber").val() < totalCount) {
+            pagination += '<li class="page-item"><a class="page-link border-dark text-white bg-dark Next" data-page = "Next" href="#">Next</a></li>';
+        }
+        pagination += '</ul>';
+        $("#pagination").append(pagination);
+    }
+
+
+    //To Render the list of Books
+    function BookList() {
+        debugger;
+        var data = ($("#searchBook").serialize());
+        console.log(data);
+        $.ajax({
+            type: "POST",
+            url: '@Url.Action("GetBooks", "Books")',
+            data: $("#searchBook").serialize(),
+            success: function (response) {
+                debugger;
+                console.log(data);
+                $("#table_content tbody").empty();
+                $.each(response.BooksViewModel, function (index, book) {
+                    debugger
+                    var row = "<tr>"
+                        + "<td>" + book.BookId + "</td>"
+
+                        + "<td>" + book.BookName + "</td>"
+
+                        + "<td>" + book.CategoryName + "</td>"
+
+                        + "<td>" + book.IsActive + "</td>"
+
+                        + "<td>" + book.PublisherBook + "</td>"
+
+                        + "<td><a href='/Books/AddBook?Id=" + book.BookId + "'>Edit</a></td>"
+
+                        + "<td><a href = '#' class = 'DeleteBook' data-toggle='modal' data-bookid = " + book.BookId + " data-bookName = '" + book.BookName + "'>Delete</a></td>"
+
+                        + "<td><a href='#' class = 'editWithModal' data-bookid =" + book.BookId + ">Edit With Modal</a></td>"
+
+                        + "</tr>";
+                    $("#table_content tbody").append(row);
+                });
+                var totalCount = response.TotalCount;
+                Pages(totalCount);
+            }
+        });
+    }
+
+
+    //-----------------------------------------------//
+
+    $(document).ready(function () {
+
+        BookList();
+
+
+        //To display Books based on the PageNumber clicked
+        $("#pagination").on("click", ".pages", function (event) {
+            debugger;
+            event.preventDefault();
+            $("#PageNumber").val($(this).data("page"));
+            BookList();
+        });
+
+
+        //For Next Functionality
+        $("#pagination").on("click", ".Next", function (event) {
+            event.preventDefault();
+            $("#PageNumber").val(parseInt($("#PageNumber").val()) + 1);
+            BookList();
+        });
+
+
+        //For Previous Functionality
+        $("#pagination").on("click", ".Previous", function (event) {
+            event.preventDefault();
+            $("#PageNumber").val(parseInt($("#PageNumber").val()) - 1);
+            BookList();
+        });
+
+
+        //To render Books based on search criteria
+        $("#SearchButton").click(function (event) {
+            $("#PageNumber").val(1);
+            BookList();
+        });
+
+
+        //To reset the form upon Reset button click
+        $("#ResetButton").click(function () {
+            debugger;
+            //$("searchBook").trigger("reset");
+            //$("#BookName").val('');
+            //$("#CategoryId").val('');
+            //$("#PageNumber").val(1);
+            //$("#PageSize").val(3);
+            //BookList();
+            $.ajax({
+                type: "POST",
+                url: '@Url.Action("ResetSession", "Books")',
+                success: function (response) {
+                    debugger;
+                    console.log(response);
+                    $("#BookName").val(response.BookName);
+                    $("#CategoryId").val(response.CategoryId == 0 ? '' : response.CategoryId);
+                    $("#PageNumber").val(response.PageNumber);
+                    $("#PageSize").val(response.PageSize);
+                    $("#PublisherId").val(response.PublisherId == 0 ? '' : response.PublisherId);
+                    BookList();
+                }
+            });
+
+        });
+
+
+        //To render Books when page size is changed
+        $("#PageSize").change(function () {
+            $("#PageNumber").val(1);
+            BookList();
+        });
+
+
+        //To Add a Book
+        $("#AddButton").click(function () {
+            location.href = '@Url.Action("AddBook", "Books")';
+        });
+
+
+        //When clicked on Delete save the value to hidden field BookId and ask for confirmation
+        $("table tbody").on("click", ".DeleteBook", function () {
+            debugger;
+            $("#BookId").val($(this).data("bookid"));
+            $("#bookId").text($(this).data("bookid"));
+            $("#bookName").text($(this).data("bookname"));
+            $("#DeleteForm").modal('show');
+        });
+
+
+        //To Delete a Book when clicked on confirm
+        $(".modal").on("click", "#Confirm", function () {
+            debugger
+            console.log($("#BookId").val());
+            $.ajax({
+                type: "POST",
+                url: '@Url.Action("DeleteBook", "Books")',
+                data: { BookId: $("#BookId").val() },
+                success: function (response) {
+                    if (response) {
+                        $("#DeleteForm").modal('hide');
+                        BookList();
+                        alert("Book Deleted Successfully");
+                    }
+                    else {
+                        alert("Something Went Wrong ... Try Again")
+                    }
+                }
+            });
+        });
+    });
+
+
+    //To go back to the list when clicked on Cancel
+    $(".Cancel").click(function () {
+        $(".modal").modal('hide');
+    });
+
+    //Display Modal when clicked on Add Button
+    $("#AddButtonModal").click(function () {
+        $("#AddBookUsingModal #BookId").val(0);
+        $("#AddBookUsingModal #BookName").val('');
+        $("#AddBookUsingModal #CategoryId").val('');
+        $("#AddBookUsingModal #IsActive").prop("checked", false);
+        $("#AddBookModalMenu").modal('show');
+    });
+
+    //-------------------------------------Add Method With Modal Script------------------------------//
+
+    // When clicked On Confirm Save the data or Update the Data
+    $("#SaveModal").click(function () {
+        debugger;
+        if ($("#AddBookUsingModal").valid()) {
+            $.ajax({
+                type: "POST",
+                url: '@Url.Action("AddUpdateBook", "Books")',
+                data: $("#AddBookUsingModal").serialize(),
+                success: function (response) {
+                    debugger;
+                    if (response == "Book Inserted Successfully") {
+                        alert("Book Inserted Successfully");
+                        BookList();
+                        $(".modal").modal('hide');
+                    }
+                    else if (response == "Book Updated Successfully") {
+                        alert("Book Updated Successfully");
+                        BookList();
+                        $(".modal").modal('hide');
+                    }
+                    else {
+                        alert("Something Went Wrong");
+                    }
+                    $("#AddBookUsingModal").trigger("reset");
+                }
+            });
+        }
+
+    });
+
+    //When Clicked on Edit With Modal Show the details of the book
+    $("table tbody").on("click", ".editWithModal", function () {
+        debugger;
+        if ($(this).data("bookid") > 0) {
+            $("#ModalLongTitle").empty();
+            $("#ModalLongTitle").text("Update Book");
+        }
+        $.ajax({
+            type: "POST",
+            url: '@Url.Action("GetData", "Books")',
+            data: { id: $(this).data("bookid") },
+            success: function (response) {
+                debugger
+                console.log(response);
+                console.log(response.BookName);
+                $("#AddBookModalMenu #BookId").val(response.BookId);
+                $("#AddBookModalMenu #BookName").val(response.BookName);
+                $("#AddBookModalMenu #CategoryId").val(response.CategoryId);
+                $("#AddBookModalMenu #checkbox").prop("checked", response.IsActive);
+                $("#AddBookModalMenu").modal('show');
+            }
+        });
+    });
+
+</script>
